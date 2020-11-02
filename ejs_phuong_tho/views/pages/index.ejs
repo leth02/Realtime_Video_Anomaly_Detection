@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head'); %>
+</head>
+<body class="container">
+
+<header>
+    <%- include('../partials/header'); %>
+</header>
+
+<main>
+    <div class="jumbotron">
+        
+        <video id="video" autoplay></video>
+        <canvas id="canvas"></canvas>
+
+        <button id="capture-button">capture video</button>
+        <button id="screenshot-button">screenshot</button>
+    </div>
+</main>
+
+<footer>
+    <%- include('../partials/footer'); %>
+</footer>
+
+<script>
+    const captureVideoButton =
+      document.querySelector('#capture-button');
+    const screenshotButton = document.querySelector('#screenshot-button');
+    const img = document.querySelector('#img');
+    const video = document.querySelector('#video');
+    
+    const canvas = document.querySelector('#canvas');
+    
+    captureVideoButton.onclick = function() {
+      navigator.mediaDevices.getUserMedia({
+          video: true
+      }).
+        then(handleSuccess).catch(handleError);
+    };
+    
+    screenshotButton.onclick = video.onclick = function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        // send the blob image to server
+        canvas.toBlob(function(blob) {
+            //console.log(blob);
+            var newblob = new Blob(['abc123'], {type: 'text/plain'});
+            var oReq = new XMLHttpRequest();
+            oReq.open("POST", 'http://localhost:8080/saveimage', true);
+            oReq.onload = function (oEvent) {
+                console.log("uploaded")
+            };
+
+            oReq.send(newblob);
+        })
+
+    };
+    
+    function handleSuccess(stream) {
+      screenshotButton.disabled = false;
+      video.srcObject = stream;
+    }
+
+    function handleError(error) {
+        console.log(error);
+    }
+</script>
+
+</body>
+</html>

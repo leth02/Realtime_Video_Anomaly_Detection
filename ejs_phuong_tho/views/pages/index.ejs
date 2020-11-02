@@ -13,10 +13,11 @@
     <div class="jumbotron">
         
         <video id="video" autoplay></video>
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" name ="photos"></canvas>
 
         <button id="capture-button">capture video</button>
-        <button id="screenshot-button">screenshot</button>
+        <button id="start-button">start</button>
+        <button id="end-button">end</button>
     </div>
 </main>
 
@@ -27,7 +28,8 @@
 <script>
     const captureVideoButton =
       document.querySelector('#capture-button');
-    const screenshotButton = document.querySelector('#screenshot-button');
+    const startButton = document.querySelector('#start-button');
+    const endButton = document.querySelector('#end-button');
     const img = document.querySelector('#img');
     const video = document.querySelector('#video');
     
@@ -40,28 +42,47 @@
         then(handleSuccess).catch(handleError);
     };
     
-    screenshotButton.onclick = video.onclick = function() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+    startButton.onclick = video.onclick = function() {
+        var i = 0;
 
-        // send the blob image to server
-        canvas.toBlob(function(blob) {
-            //console.log(blob);
-            var newblob = new Blob(['abc123'], {type: 'text/plain'});
-            var oReq = new XMLHttpRequest();
-            oReq.open("POST", 'http://localhost:8080/saveimage', true);
-            oReq.onload = function (oEvent) {
-                console.log("uploaded")
-            };
+        var myVar = setInterval(myTimer, 1000);
 
-            oReq.send(newblob);
-        })
+        function myTimer(){
+            if(i===9){
+                clearInterval(myVar)
+            }
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
 
+            // send the blob image to server
+            canvas.toBlob(function(blob) {
+                
+                data = new FormData();
+                data.append('file', blob);
+
+                $.ajax({
+                    url: "/saveimage/",
+                    type: "POST",
+                    data: data,
+                    enctype: 'multipart/form-data',
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        document.getElementById("result").innerHTML = 'Result: Upload successful';
+                    },
+                    error: function(e) {
+                        document.getElementById("result").innerHTML = 'Result: Error occurred: ' + e.message;
+                    }
+                });      
+            })
+            
+            i=i+1;
+        }
     };
     
     function handleSuccess(stream) {
-      screenshotButton.disabled = false;
+      startButton.disabled = false;
       video.srcObject = stream;
     }
 

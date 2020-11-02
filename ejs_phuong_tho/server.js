@@ -6,6 +6,8 @@ var app = express();
 app.set('view engine', 'ejs');
 
 // use res.render to load up an ejs view file
+var multer  = require('multer')
+var upload = multer({ dest: 'uploads/' })
 
 
 // index page
@@ -24,14 +26,13 @@ app.get('/', function(req, res) {
 });
 
 // save image
-app.post('/saveimage', function(req, res) {
+let data = []
+app.post('/saveimage', upload.any(), function(req, res) {
     let file = req.files;
     console.log(file);
-    
-})
-
-app.post('/test', function(req, res) {
-    console.log(req.body);
+    let blob = file[0];
+    data.push(blob);
+    console.log(data);
 })
 
 // about page

@@ -42,24 +42,30 @@
         then(handleSuccess).catch(handleError);
     };
     
+    var myVar;
+
+    // end the video, stop 
+    endButton.onclick = function(){
+        clearInterval(myVar);
+    }
+
+    // start the video and take a screenshot per second
     startButton.onclick = video.onclick = function() {
-        var i = 0;
 
-        var myVar = setInterval(myTimer, 1000);
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
 
+        myVar = setInterval(myTimer, 1000);
+        
         function myTimer(){
-            if(i===9){
-                clearInterval(myVar)
-            }
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-
+        
             // send the blob image to server
             canvas.toBlob(function(blob) {
                 
                 data = new FormData();
                 data.append('file', blob);
+                console.log(blob)
 
                 $.ajax({
                     url: "/saveimage/",
@@ -69,15 +75,14 @@
                     processData: false,
                     contentType: false,
                     success: function(data) {
-                        document.getElementById("result").innerHTML = 'Result: Upload successful';
+                        //document.getElementById("result").innerHTML = 'Result: Upload successful';
+
                     },
                     error: function(e) {
                         document.getElementById("result").innerHTML = 'Result: Error occurred: ' + e.message;
                     }
                 });      
             })
-            
-            i=i+1;
         }
     };
     

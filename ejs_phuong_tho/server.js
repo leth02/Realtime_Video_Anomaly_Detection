@@ -29,10 +29,9 @@ app.get('/', function(req, res) {
 let data = []
 app.post('/saveimage', upload.any(), function(req, res) {
     let file = req.files;
-    console.log(file);
     let blob = file[0];
     data.push(blob);
-    console.log(data);
+    res.send("success")
 })
 
 // about page

@@ -1,6 +1,23 @@
 // load the things we need
 var express = require('express');
 var app = express();
+var randomId = require('random-id');
+var len = 10;
+var pattern = 'aA0';
+
+const { Kafka } = require('kafkajs');
+
+const kafka = new Kafka({
+  clientId: 'my-app',
+  brokers: ['localhost:9092']
+});
+
+const producer = kafka.producer();
+
+const run = async () => {
+  await producer.connect();
+}
+run().catch(e => console.error(e));
 
 // set the view engine to ejs
 app.set('view engine', 'ejs');
@@ -26,12 +43,28 @@ app.get('/', function(req, res) {
 });
 
 // save image
-let data = []
+let data = [];
+
+const sendMessage = (blob) => {
+  return producer
+    .send({
+      topic: 'quickstart-events',
+      messages: [{
+        key: randomId(len, pattern),
+        value: blob
+      }]
+    })
+    .then(console.log('image published to kafka'))
+    .catch(e => console.error('failed to publish image', e))
+};
+
 app.post('/saveimage', upload.any(), function(req, res) {
     let file = req.files;
     let blob = file[0];
     data.push(blob);
-    res.send("success")
+    sendMessage(blob);
+
+    res.send("success");
 })
 
 // about page

@@ -5,6 +5,8 @@ var randomId = require('random-id');
 var len = 10;
 var pattern = 'aA0';
 
+var toBuffer = require('blob-to-buffer')
+
 const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
@@ -22,11 +24,12 @@ run().catch(e => console.error(e));
 // set the view engine to ejs
 app.set('view engine', 'ejs');
 
-// use res.render to load up an ejs view file
+
 var multer  = require('multer')
-var upload = multer({ dest: 'uploads/' })
+var storage = multer.memoryStorage();
+var upload = multer({storage: storage});
 
-
+// use res.render to load up an ejs view file
 // index page
 app.get('/', function(req, res) {
     var mascots = [
@@ -42,27 +45,22 @@ app.get('/', function(req, res) {
     });
 });
 
-// save image
-let data = [];
 
-const sendMessage = (blob) => {
-  return producer
-    .send({
-      topic: 'quickstart-events',
-      messages: [{
-        key: randomId(len, pattern),
-        value: blob
-      }]
-    })
-    .then(console.log('image published to kafka'))
-    .catch(e => console.error('failed to publish image', e))
+const sendToKafka = (bufferArray) => {
+    return producer
+            .send({
+                topic: 'test',
+                messages: [{
+                    key: randomId(len, pattern),
+                    value: bufferArray
+                }]
+            })
+            .then(console.log('send request to Kafka executed'))
+            .catch(e => console.error('failed to publish image', e))
 };
 
 app.post('/saveimage', upload.any(), function(req, res) {
-    let file = req.files;
-    let blob = file[0];
-    data.push(blob);
-    sendMessage(blob);
+    sendToKafka(req.files[0]['buffer']);
 
     res.send("success");
 })
@@ -72,5 +70,5 @@ app.get('/about', function(req, res) {
     res.render('pages/about');
 });
 
-app.listen(8080);
-console.log('8080 is the magic port');
+app.listen(8111);
+console.log('8111 is the magic port');
